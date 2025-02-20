@@ -31,42 +31,51 @@ def train_skipgram(model: SkipGramNeg,
         print_every: The frequency of printing the training loss and validation examples.
         device: The device (CPU or GPU) where the tensors will be allocated.
     """
-    # Define loss and optimizer
-    # TODO
-    criterion = None
+    # Mover modelo al dispositivo correspondiente
+    model.to(device)
+
+    # Definir la función de pérdida y el optimizador
+    criterion = NegativeSamplingLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     steps = 0
-    # Training loop
+
+    # Bucle de entrenamiento    
     for epoch in range(epochs):
-        for input_words, target_words in None:
+        # Generar batches con la función get_batches
+        for input_words, target_words in get_batches(words, batch_size, window_size):
             steps += 1
-            # Convert inputs and context words into tensors
+           
             inputs, targets = torch.LongTensor(input_words), torch.LongTensor(target_words)
             inputs, targets = inputs.to(device), targets.to(device)
 
-            # input, output, and noise vectors
-            # TODO
-            input_vectors = None
-            output_vectors = None
-            noise_vectors = None
-            
-            # negative sampling loss
-            # TODO
-            loss = criterion(None, None, None)
+            # Obtener vectores de entrada, salida y ruido
+            input_vectors = model.forward_input(inputs)
+            output_vectors = model.forward_output(targets)
+            noise_vectors = model.forward_noise(inputs.size(0), window_size)
 
-            # Backward step
-            # TODO
+            # Calcular la pérdida usando la función de pérdida personalizada
+            loss = criterion(input_vectors, output_vectors, noise_vectors)
 
+            # Paso hacia atrás y optimización
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            # Imprimir métricas periódicamente
             if steps % print_every == 0:
-                print(f"Epoch: {epoch+1}/{epochs}, Step: {steps}, Loss: {loss.item()}")
-                # Cosine similarity
-                # TODO
-                valid_examples, valid_similarities = cosine_similarity(None, device=device)
-                _, closest_idxs = valid_similarities.topk(6)
+                print(f"Epoch: {epoch+1}/{epochs}, Step: {steps}, Loss: {loss.item():.4f}")
+
+                # Calcular similitud coseno para palabras de validación
+                valid_examples, valid_similarities = cosine_similarity(model.out_embed, device=device)
+                _, closest_idxs = valid_similarities.topk(6)  # Tomamos las 6 más cercanas
 
                 valid_examples, closest_idxs = valid_examples.to('cpu'), closest_idxs.to('cpu')
-                for ii, valid_idx in enumerate(valid_examples):
-                    closest_words = [int_to_vocab[idx.item()] for idx in closest_idxs[ii]][1:]
-                    print(int_to_vocab[valid_idx.item()] + " | " + ', '.join(closest_words))
+
+                for i, valid_idx in enumerate(valid_examples):
+                    valid_word = int_to_vocab[valid_idx.item()]
+                    closest_words = [int_to_vocab[idx.item()] for idx in closest_idxs[i][1:]]  # Excluir la palabra en sí
+                    print(f"{valid_word} | {', '.join(closest_words)}")
+
                 print("...\n")
+
