@@ -20,7 +20,7 @@ def load_and_preprocess_data(infile: str) -> List[str]:
         List[str]: A list of preprocessed and tokenized words from the input text.
     """
     with open(infile) as file:
-        text = file.read()  # Read the entire file
+        text = file.read()  
 
 
     tokens: List[str] = tokenize(text)
@@ -66,7 +66,6 @@ def subsample_words(words: List[str], vocab_to_int: Dict[str, int], threshold: f
         List[int]: A list of integers representing the subsampled words, where some high-frequency words may be removed.
         Dict[str, float]: Dictionary associating each word with its frequency.
     """
-    # Convert words to integers
     int_words: List[int] = []
     for word in words:
         int_words.append(vocab_to_int[word])
@@ -161,13 +160,10 @@ def cosine_similarity(embedding: torch.nn.Embedding, valid_size: int = 16, valid
 
     embedding_weights = embedding.weight # (vocab_size, embedding_dim)
 
-    # Así, cada embedding pasa a ser unitario y el dot product = coseno.
     embedding_weights_norm = embedding_weights / (embedding_weights.norm(dim=1, keepdim=True) + 1e-9)
 
-    # Extraemos los vectores de validación con los índices escogidos
     valid_vectors = embedding_weights_norm[valid_examples]  # (valid_size, embedding_dim)
 
-    # Calculamos el dot product con la matriz completa -> similitud coseno
     similarities = valid_vectors @ embedding_weights_norm.t()  # (valid_size, vocab_size)
 
     return valid_examples, similarities

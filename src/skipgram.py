@@ -31,11 +31,9 @@ class SkipGramNeg(nn.Module):
         self.n_embed: int = n_embed
         self.noise_dist: torch.Tensor = noise_dist
 
-        # Define embedding layers for input and output words
         self.in_embed: nn.Embedding = nn.Embedding(n_vocab, n_embed)
         self.out_embed: nn.Embedding = nn.Embedding(n_vocab, n_embed)
 
-        # Initialize embedding tables with uniform distribution
         self.in_embed.weight.data.uniform_(-1, 1)
         self.out_embed.weight.data.uniform_(-1, 1)
 
@@ -74,18 +72,16 @@ class SkipGramNeg(nn.Module):
             A tensor of noise vectors with shape (batch_size, n_samples, n_embed).
         """
         if self.noise_dist is None:
-            # Sample words uniformly
+
             noise_dist: torch.Tensor = torch.ones(self.n_vocab)
         else:
             noise_dist: torch.Tensor = self.noise_dist
 
-        # Sample words from our noise distribution
         noise_words: torch.Tensor = torch.multinomial(noise_dist, batch_size * n_samples, replacement=True)
 
         device: str = "cuda" if self.out_embed.weight.is_cuda else "cpu"
         noise_words: torch.Tensor = noise_words.to(device)
 
-        # Reshape output vectors to size (batch_size, n_samples, n_embed)
         noise_vectors: torch.Tensor = torch.reshape(self.out_embed(noise_words), (batch_size, n_samples, self.n_embed))
 
         return noise_vectors
@@ -122,17 +118,13 @@ class NegativeSamplingLoss(nn.Module):
         """
         batch_size, embed_size = input_vectors.shape
  
-        # Reshape input and output vectors
         input_vectors = input_vectors.view(batch_size, embed_size, 1)
         output_vectors = output_vectors.view(batch_size, 1, embed_size)
  
-        # Compute log-sigmoid loss for correct classifications
         out_loss = torch.bmm(output_vectors, input_vectors).sigmoid().log()
         out_loss = out_loss.squeeze()
  
-        # Compute log-sigmoid loss for incorrect classifications
         noise_loss = torch.bmm(noise_vectors.neg(), input_vectors).sigmoid().log()
-        noise_loss = noise_loss.squeeze().sum(1)  # Sum over the sample of noise vectors
+        noise_loss = noise_loss.squeeze().sum(1) 
  
-        # Return the negative sum of the correct and noisy log-sigmoid losses, averaged over the batch
         return -(out_loss + noise_loss).mean()

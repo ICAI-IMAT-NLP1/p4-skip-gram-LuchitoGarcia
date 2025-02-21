@@ -1,0 +1,4 @@
+Cada punto de la imagen representa una palabra transformada a un vector bidimensional. 
+Las palabras cercanas en el gráfico tienen significados similares en función de cómo aparecen en el texto del corpus de entrenamiento. 
+Es decir, palabras que suelen usarse en contextos similares están más próximas entre sí. Por ejemplo, "present" "do" "this" y "does" estan muy proximas.
+
