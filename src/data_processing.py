@@ -22,7 +22,7 @@ def load_and_preprocess_data(infile: str) -> List[str]:
     with open(infile) as file:
         text = file.read()  # Read the entire file
 
-    # Preprocess and tokenize the text
+
     tokens: List[str] = tokenize(text)
     return tokens
 
@@ -38,7 +38,7 @@ def create_lookup_tables(words: List[str]) -> Tuple[Dict[str, int], Dict[int, st
         and the second maps integers to words (int_to_vocab).
     """
     word_counts: Counter = Counter(words)
-        # Sorting the words from most to least frequent in text occurrence.
+
     sorted_vocab = sorted(word_counts, key = word_counts.get, reverse=True)
 
     int_to_vocab = {i: word for i, word in enumerate(sorted_vocab)}
